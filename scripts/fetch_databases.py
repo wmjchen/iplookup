@@ -6,11 +6,12 @@ Free (no token):
   - location.db.xz (IPFire)
 
 Token required (skipped with a warning if unset):
-  - GeoLite2 City/ASN via MAXMIND_LICENSE_KEY
+  - GeoLite2 City/ASN via MAXMIND_ACCOUNT_ID + MAXMIND_LICENSE_KEY
   - IP2Location LITE DB11 via IP2LOCATION_DOWNLOAD_TOKEN
 """
 from __future__ import annotations
 
+import base64
 import os
 import sys
 import tarfile
@@ -28,8 +29,7 @@ IP_INDEX_URL = (
 )
 IPFIRE_URL = "https://location.ipfire.org/databases/1/location.db.xz"
 MAXMIND_URL = (
-    "https://download.maxmind.com/app/geoip_download"
-    "?edition_id={edition}&license_key={key}&suffix=tar.gz"
+    "https://download.maxmind.com/geoip/databases/{edition}/download?suffix=tar.gz"
 )
 IP2LOCATION_URL = (
     "https://www.ip2location.com/download"
@@ -37,6 +37,23 @@ IP2LOCATION_URL = (
 )
 
 UA = "iplookup-fetch-databases/0.1"
+
+
+class _MaxMindRedirectHandler(urllib.request.HTTPRedirectHandler):
+    """Follow MaxMind → R2 redirects without re-sending auth/extra headers.
+
+    urllib's default redirect handler leaves headers that make R2 signed URLs
+    return 400 Missing x-amz-content-sha256.
+    """
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        newreq = super().redirect_request(req, fp, code, msg, headers, newurl)
+        if newreq is None:
+            return None
+        newreq.headers.clear()
+        newreq.unredirected_hdrs.clear()
+        newreq.add_header("User-Agent", UA)
+        return newreq
 
 
 def _log(msg: str) -> None:
@@ -61,6 +78,19 @@ def _download(url: str, dest: Path, *, timeout: int = 300) -> None:
             raise
 
 
+def _open_maxmind(url: str, account_id: str, license_key: str, *, timeout: int = 300):
+    auth = base64.b64encode(f"{account_id}:{license_key}".encode()).decode()
+    req = urllib.request.Request(
+        url,
+        headers={
+            "User-Agent": UA,
+            "Authorization": f"Basic {auth}",
+        },
+    )
+    opener = urllib.request.build_opener(_MaxMindRedirectHandler)
+    return opener.open(req, timeout=timeout)
+
+
 def fetch_ip_index() -> None:
     dest = DATA / "ip-index.mmdb"
     _log(f"fetching ip-index -> {dest}")
@@ -73,17 +103,16 @@ def fetch_ipfire() -> None:
     _download(IPFIRE_URL, dest)
 
 
-def fetch_maxmind(license_key: str) -> None:
+def fetch_maxmind(account_id: str, license_key: str) -> None:
     for edition, out_name in (
         ("GeoLite2-City", "GeoLite2-City.mmdb"),
         ("GeoLite2-ASN", "GeoLite2-ASN.mmdb"),
     ):
-        url = MAXMIND_URL.format(edition=edition, key=license_key)
+        url = MAXMIND_URL.format(edition=edition)
         _log(f"fetching MaxMind {edition}")
-        req = urllib.request.Request(url, headers={"User-Agent": UA})
         with tempfile.TemporaryDirectory(dir=DATA) as tmp:
             tar_path = Path(tmp) / f"{edition}.tar.gz"
-            with urllib.request.urlopen(req, timeout=300) as resp, tar_path.open(
+            with _open_maxmind(url, account_id, license_key) as resp, tar_path.open(
                 "wb"
             ) as f:
                 while True:
@@ -158,19 +187,27 @@ def main() -> int:
             errors.append(f"{label}: {e}")
             _log(f"ERROR {label}: {e}")
 
+    maxmind_account = (
+        os.environ.get("MAXMIND_ACCOUNT_ID")
+        or os.environ.get("GEOIPUPDATE_ACCOUNT_ID")
+        or ""
+    ).strip()
     maxmind_key = (
         os.environ.get("MAXMIND_LICENSE_KEY")
         or os.environ.get("GEOIPUPDATE_LICENSE_KEY")
         or ""
     ).strip()
-    if maxmind_key:
+    if maxmind_account and maxmind_key:
         try:
-            fetch_maxmind(maxmind_key)
+            fetch_maxmind(maxmind_account, maxmind_key)
         except (urllib.error.URLError, OSError, RuntimeError) as e:
             errors.append(f"maxmind: {e}")
             _log(f"ERROR maxmind: {e}")
     else:
-        _log("skip MaxMind (set MAXMIND_LICENSE_KEY to fetch GeoLite2)")
+        _log(
+            "skip MaxMind (set MAXMIND_ACCOUNT_ID and MAXMIND_LICENSE_KEY "
+            "to fetch GeoLite2)"
+        )
 
     ip2_token = os.environ.get("IP2LOCATION_DOWNLOAD_TOKEN", "").strip()
     if ip2_token:

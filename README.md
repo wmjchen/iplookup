@@ -18,7 +18,7 @@ Open http://127.0.0.1:8000/ (API docs at `/docs`).
 | Database | Env var |
 |----------|---------|
 | ip-index, IPFire Location | none (always fetched) |
-| MaxMind GeoLite2 City + ASN | `MAXMIND_LICENSE_KEY` |
+| MaxMind GeoLite2 City + ASN | `MAXMIND_ACCOUNT_ID` + `MAXMIND_LICENSE_KEY` |
 | IP2Location LITE DB11 | `IP2LOCATION_DOWNLOAD_TOKEN` |
 | IPinfo Lite (live API, not a file) | `IPINFO_TOKEN` |
 
@@ -30,7 +30,7 @@ Repo includes `nixpacks.toml`: install deps, run `fetch_databases.py`, start uvi
 
 Set these as **build-time** variables so the fetch step can reach paid/free-with-account DBs:
 
-- `MAXMIND_LICENSE_KEY`
+- `MAXMIND_ACCOUNT_ID` + `MAXMIND_LICENSE_KEY` (from your MaxMind account portal)
 - `IP2LOCATION_DOWNLOAD_TOKEN`
 
 Runtime:
