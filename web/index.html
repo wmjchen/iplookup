@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>iplookup — IP Intelligence</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <div class="page">
+    <header class="header">
+      <h1>iplookup</h1>
+      <p class="tagline">Multi-source IP geolocation, proxy detection &amp; risk score</p>
+      <form id="search-form" class="search">
+        <input id="ip-input" type="text" placeholder="IP or domain (e.g. google.com) — empty = your IP" autocomplete="off" />
+        <button type="submit">Search</button>
+      </form>
+    </header>
+
+    <div id="status" class="status hidden"></div>
+
+    <section id="hero" class="hero hidden">
+      <div class="hero-main">
+        <div class="ip-row">
+          <span class="flag" id="hero-flag" aria-hidden="true"></span>
+          <div class="ip" id="hero-ip">—</div>
+        </div>
+        <div class="domain-line hidden" id="domain-line"></div>
+        <div class="badges" id="badges"></div>
+      </div>
+      <div class="score-box">
+        <div class="score-label">Risk score</div>
+        <div class="score" id="risk-score">—</div>
+      </div>
+    </section>
+
+    <nav class="tabs" id="tabs">
+      <button data-tab="overview" class="active">Overview</button>
+      <button data-tab="whois">WHOIS</button>
+      <button data-tab="map">Map</button>
+      <button data-tab="blocklists">Blocklists</button>
+    </nav>
+
+    <main>
+      <section id="tab-overview" class="tab-panel">
+        <div class="grid">
+          <div class="card">
+            <h3>Location</h3>
+            <dl id="loc-dl"></dl>
+          </div>
+          <div class="card">
+            <h3>Network</h3>
+            <dl id="net-dl"></dl>
+          </div>
+          <div class="card">
+            <h3>Classification</h3>
+            <dl id="class-dl"></dl>
+          </div>
+          <div class="card hidden" id="dns-card">
+            <h3>DNS</h3>
+            <dl id="dns-dl"></dl>
+          </div>
+        </div>
+
+        <div class="card sources-card">
+          <h3>Sources <span class="muted" id="sources-count"></span></h3>
+          <p class="hint">Server: MaxMind + ip-index + IPFire + IP2Location · ip-api + IPinfo Lite proxies · Browser free APIs. DB-IP free = visitor IP only.</p>
+          <div class="table-wrap">
+            <table id="sources-table">
+              <thead>
+                <tr>
+                  <th>Provider</th>
+                  <th>Country</th>
+                  <th>Region</th>
+                  <th>City</th>
+                  <th>ASN</th>
+                  <th>ISP / Org</th>
+                  <th>Flags</th>
+                  <th>Error</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card sources-card hidden" id="related-card">
+          <h3>Related addresses <span class="muted">(other A / AAAA)</span></h3>
+          <p class="hint">Domain lookups analyze both IPv4 and IPv6 when DNS has both. Click an address to focus it.</p>
+          <div id="related-list" class="related-list"></div>
+        </div>
+      </section>
+
+      <section id="tab-whois" class="tab-panel hidden">
+        <div class="card">
+          <dl id="whois-dl"></dl>
+        </div>
+      </section>
+
+      <section id="tab-map" class="tab-panel hidden">
+        <div class="card map-card">
+          <div id="map"></div>
+        </div>
+      </section>
+
+      <section id="tab-blocklists" class="tab-panel hidden">
+        <div class="card hidden" id="blocklists-card">
+          <h3>Blocklists <span class="muted" id="blocklists-count"></span></h3>
+          <div id="blocklists-summary" class="muted small"></div>
+          <div class="table-wrap">
+            <table id="blocklists-table">
+              <thead>
+                <tr>
+                  <th>Source</th>
+                  <th>Category</th>
+                  <th>Severity</th>
+                  <th>Matched</th>
+                  <th>Detail</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <details class="blocklists-manage">
+            <summary>Loaded sources (<span id="loaded-count">0</span>)</summary>
+            <div id="loaded-sources" class="muted small"></div>
+            <button type="button" id="refresh-blocklists-btn" class="link-btn">Re-fetch /api/blocklists</button>
+          </details>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span id="meta"></span>
+      <div class="attribution">
+        <p>
+          This product includes GeoLite2 data created by MaxMind, available from
+          <a href="https://www.maxmind.com" rel="noopener">maxmind.com</a>.
+          IP geolocation data by
+          <a href="https://www.ipfire.org/location/" rel="noopener">IPFire Location</a>,
+          licensed under
+          <a href="https://creativecommons.org/licenses/by-sa/4.0/" rel="noopener">CC BY-SA 4.0</a>.
+          iplookup uses the
+          <a href="https://lite.ip2location.com" rel="noopener">IP2Location LITE</a>
+          database for IP geolocation.
+          <a href="https://db-ip.com" rel="noopener">IP Geolocation by DB-IP</a>.
+        </p>
+        <p>
+          Additional sources:
+          <a href="https://ipinfo.io" rel="noopener">IPinfo</a> ·
+          <a href="https://ip-api.com" rel="noopener">ip-api</a> ·
+          <a href="https://ipwho.is" rel="noopener">ipwho.is</a> ·
+          <a href="https://freeipapi.com" rel="noopener">freeipapi</a> ·
+          <a href="https://ip.sb" rel="noopener">ip.sb</a> ·
+          <a href="https://github.com/Umkus/ip-index" rel="noopener">Umkus/ip-index</a> ·
+          Map © <a href="https://www.openstreetmap.org/copyright" rel="noopener">OpenStreetMap</a> contributors
+        </p>
+      </div>
+    </footer>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="/static/app.js"></script>
+</body>
+</html>
