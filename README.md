@@ -51,6 +51,5 @@ uv run pytest -q
 - GeoLite2 data created by MaxMind, available from [maxmind.com](https://www.maxmind.com)
 - IP geolocation data by [IPFire Location](https://www.ipfire.org/location/) (CC BY-SA 4.0)
 - [IP2Location LITE](https://lite.ip2location.com) for IP geolocation
-- [IP Geolocation by DB-IP](https://db-ip.com)
 - `app/vendor/pylibloc.py` from [gereoffy/pylibloc](https://github.com/gereoffy/pylibloc) (LGPL-2.1)
 - Map tiles © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors
