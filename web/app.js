@@ -8,7 +8,6 @@ const $ = (sel) => document.querySelector(sel);
  * Extra geo sources.
  * - browser: fetched from the visitor's machine (CORS)
  * - server: proxied via our API (e.g. ip-api HTTP-only free tier)
- * - dbip free public API only allows the visitor's own IP (`/self`)
  */
 const EXTRA_SOURCES = [
   {
@@ -128,39 +127,6 @@ const EXTRA_SOURCES = [
     },
   },
   {
-    id: "dbip",
-    label: "DB-IP",
-    mode: "browser",
-    // Free tier: only visitor IP via /self. Arbitrary IPs need a private API key.
-    visitorOnly: true,
-    buildUrl: (_ip) => `https://api.db-ip.com/v2/free/self`,
-    map: (d, ip) => {
-      if (d.errorCode || d.error) {
-        throw new Error(d.error || d.errorCode || "db-ip restricted");
-      }
-      return {
-        provider_id: "dbip",
-        ip: d.ipAddress || ip,
-        country: d.countryName,
-        country_code: d.countryCode,
-        region: d.stateProv,
-        city: d.city,
-        postal: null,
-        latitude: null,
-        longitude: null,
-        timezone: null,
-        asn: null,
-        as_name: null,
-        isp: null,
-        org: null,
-        is_proxy: null,
-        is_hosting: null,
-        is_mobile: null,
-        error: null,
-      };
-    },
-  },
-  {
     id: "freeipapi",
     label: "freeipapi",
     mode: "browser",
@@ -271,21 +237,7 @@ function countryLabel(code, name) {
   return flag ? `${flag} ${text}` : text;
 }
 
-function sameIp(a, b) {
-  if (!a || !b) return false;
-  return String(a).toLowerCase() === String(b).toLowerCase();
-}
-
-async function fetchExtraSource(src, ip, visitorIp, timeoutMs = 5000) {
-  // DB-IP free public API only works for the visitor's own address.
-  if (src.visitorOnly && !sameIp(ip, visitorIp)) {
-    return {
-      provider_id: src.id,
-      ip,
-      error: "db-ip free: only visitor IP (use /self); private key needed for other IPs",
-    };
-  }
-
+async function fetchExtraSource(src, ip, timeoutMs = 5000) {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
@@ -297,10 +249,14 @@ async function fetchExtraSource(src, ip, visitorIp, timeoutMs = 5000) {
     const data = await res.json();
     return src.map(data, ip);
   } catch (err) {
+    let error = err.name === "AbortError" ? "timeout" : String(err.message || err);
+    if (/networkerror|failed to fetch|load failed/i.test(error)) {
+      error = `${error} — is an adblocker enabled?`;
+    }
     return {
       provider_id: src.id,
       ip,
-      error: err.name === "AbortError" ? "timeout" : String(err.message || err),
+      error,
     };
   } finally {
     clearTimeout(timer);
@@ -312,9 +268,8 @@ async function enrichWithExtraSources(report) {
   if (!ip || report.classification?.address_class === "private") {
     return report;
   }
-  const visitorIp = report.client_ip || null;
   const results = await Promise.all(
-    EXTRA_SOURCES.map((s) => fetchExtraSource(s, ip, visitorIp))
+    EXTRA_SOURCES.map((s) => fetchExtraSource(s, ip))
   );
   const byId = new Map((report.sources || []).map((s) => [s.provider_id, s]));
   for (const r of results) {
