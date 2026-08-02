@@ -33,9 +33,9 @@ INFRA_ASNS: frozenset[int] = frozenset(
         132203,  # Tencent
         37963,  # Alibaba
         60068,  # CDN77
-        60011,  # Hurricane Electric often transit — skip
+        60011,  # Hurricane Electric often transit - skip
         6939,  # Hurricane Electric
-        174,  # Cogent (transit) — skip treating as hosting alone
+        174,  # Cogent (transit) - skip treating as hosting alone
         3356,  # Level3/Lumen transit
     }
 )

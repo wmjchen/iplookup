@@ -81,7 +81,7 @@ async def api_resolve(request: Request, q: str = Query(..., min_length=1)):
 
 
 _PREFER_DESC = (
-    "For domains: which family is primary — a/ipv4 or aaaa/ipv6. "
+    "For domains: which family is primary - a/ipv4 or aaaa/ipv6. "
     "Both are looked up when present."
 )
 
@@ -178,7 +178,7 @@ async def api_lookup_path(
     db: str | None = Query(default=None),
     prefer: str | None = Query(default="a", description=_PREFER_DESC),
 ):
-    """Path-based alias of /api/lookup?q=query — handy for clients/extensions."""
+    """Path-based alias of /api/lookup?q=query - handy for clients/extensions."""
     return await _perform_lookup(request, query, db=db, prefer=prefer)
 
 

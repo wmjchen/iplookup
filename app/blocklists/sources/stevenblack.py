@@ -7,7 +7,7 @@ _CATEGORIES = {None, "adware", "fakenews", "gambling", "porn", "social"}
 
 
 class StevenblackHostsSource(HostsFileSource):
-    """StevenBlack hosts — optionally a category extension."""
+    """StevenBlack hosts - optionally a category extension."""
 
     def __init__(self, category: str | None = None) -> None:
         if category not in _CATEGORIES:

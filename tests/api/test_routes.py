@@ -274,7 +274,7 @@ def test_api_blocklists_offline_mode(monkeypatch, tmp_path):
     """Verify offline mode (no fetches) still produces a working /api/blocklists.
 
     With an empty data_dir and refresh_on_startup=False, no fetch runs and no
-    cache files exist to load — so every source starts at 0 entries.
+    cache files exist to load - so every source starts at 0 entries.
     """
     monkeypatch.setenv("BLOCKLISTS_OFFLINE_MODE", "true")
     monkeypatch.setenv("BLOCKLISTS_REFRESH_ON_STARTUP", "false")

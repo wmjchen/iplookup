@@ -87,7 +87,7 @@ async def lifespan(app: FastAPI):
             offline_mode=settings.blocklists_offline_mode,
             fetch_timeout=settings.blocklists_refresh_timeout_ms / 1000,
         )
-        await blocklist_registry.load_disk_cache()  # always — non-network
+        await blocklist_registry.load_disk_cache()  # always - non-network
         if settings.blocklists_refresh_on_startup and not settings.blocklists_offline_mode:
             await blocklist_registry.load_all()  # also fetch fresh
         await blocklist_registry.start_refresh_tasks()

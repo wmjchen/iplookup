@@ -158,7 +158,7 @@ async def test_orchestrator_cache():
 
 
 class FakeBlocklistChecker:
-    """Test double — returns a pre-baked report regardless of input."""
+    """Test double - returns a pre-baked report regardless of input."""
 
     def __init__(self, report: BlocklistReport | None = None):
         self.report = report or BlocklistReport(

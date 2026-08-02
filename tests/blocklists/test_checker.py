@@ -23,7 +23,7 @@ class _StaticSource:
         self.url = f"http://example.invalid/{source_id}"
 
     async def fetch(self, client):
-        raise RuntimeError("static source — no fetch")
+        raise RuntimeError("static source - no fetch")
 
     def parse(self, raw):
         return self._data

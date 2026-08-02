@@ -7,7 +7,7 @@ from app.core.models import BlocklistHit, BlocklistReport
 
 
 class BlocklistChecker:
-    """Pure in-memory scanner. No I/O — all data is in the registry snapshot."""
+    """Pure in-memory scanner. No I/O - all data is in the registry snapshot."""
 
     def __init__(self, registry: BlocklistRegistry, *, enabled: bool = True) -> None:
         self.registry = registry

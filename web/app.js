@@ -194,14 +194,14 @@ function hideStatus() {
 
 function setText(id, value) {
   const el = document.getElementById(id);
-  if (el) el.textContent = value ?? "—";
+  if (el) el.textContent = value ?? "-";
 }
 
 function fillDl(el, rows) {
   el.innerHTML = rows
     .map(
       ([k, v]) =>
-        `<dt>${k}</dt><dd>${v == null || v === "" ? "—" : escapeHtml(String(v))}</dd>`
+        `<dt>${k}</dt><dd>${v == null || v === "" ? "-" : escapeHtml(String(v))}</dd>`
     )
     .join("");
 }
@@ -233,7 +233,7 @@ function countryFlag(code) {
 function countryLabel(code, name) {
   const flag = countryFlag(code);
   const text = name || code || "";
-  if (!flag && !text) return "—";
+  if (!flag && !text) return "-";
   return flag ? `${flag} ${text}` : text;
 }
 
@@ -251,7 +251,7 @@ async function fetchExtraSource(src, ip, timeoutMs = 5000) {
   } catch (err) {
     let error = err.name === "AbortError" ? "timeout" : String(err.message || err);
     if (/networkerror|failed to fetch|load failed/i.test(error)) {
-      error = `${error} — is an adblocker enabled?`;
+      error = `${error} - is an adblocker enabled?`;
     }
     return {
       provider_id: src.id,
@@ -310,9 +310,9 @@ function renderRelated(data) {
       return `<button type="button" class="related-item" data-related-idx="${idx}">
         <span class="badge">${r.ip_version === 6 ? "IPv6" : "IPv4"}</span>
         <span class="related-ip">${escapeHtml(r.query)}</span>
-        <span class="related-meta">${flag} ${escapeHtml(loc || "—")}</span>
+        <span class="related-meta">${flag} ${escapeHtml(loc || "-")}</span>
         <span class="related-meta">${escapeHtml(p.asn || "")}</span>
-        <span class="related-meta">risk ${r.risk_score ?? "—"} · ${escapeHtml(
+        <span class="related-meta">risk ${r.risk_score ?? "-"} · ${escapeHtml(
           c.usage || ""
         )}</span>
       </button>`;
@@ -391,8 +391,8 @@ function renderBlocklists(report) {
   $("#blocklists-count").textContent = `(${hits.length} hit${hits.length === 1 ? "" : "s"})`;
 
   const ts = new Date((bl.checked_at || 0) * 1000).toLocaleTimeString();
-  const ips = (bl.checked_ips || []).join(", ") || "—";
-  const dom = bl.checked_domain || "—";
+  const ips = (bl.checked_ips || []).join(", ") || "-";
+  const dom = bl.checked_domain || "-";
   $("#blocklists-summary").textContent =
     `checked at ${ts} · IPs: ${ips} · domain: ${dom}`;
 
@@ -407,7 +407,7 @@ function renderBlocklists(report) {
       <td>${escapeHtml(h.detail || "")}</td>
     </tr>`;
   }).join("") ||
-    `<tr><td colspan="5" class="muted">No hits — clean across ${
+    `<tr><td colspan="5" class="muted">No hits - clean across ${
       Object.keys(bl.source_counts || {}).length
     } sources</td></tr>`;
 
@@ -492,8 +492,8 @@ function renderReport(data) {
     dnsCard.classList.remove("hidden");
     fillDl($("#dns-dl"), [
       ["Domain", data.dns.domain || data.domain],
-      ["A", (data.dns.a || []).join(", ") || "—"],
-      ["AAAA", (data.dns.aaaa || []).join(", ") || "—"],
+      ["A", (data.dns.a || []).join(", ") || "-"],
+      ["AAAA", (data.dns.aaaa || []).join(", ") || "-"],
       [
         "Analyzed",
         [data.query, ...(data.related || []).map((r) => r.query)].join(" · "),
@@ -526,7 +526,7 @@ function renderReport(data) {
   const blCount = data.blocklists ? Object.keys(data.blocklists.source_counts || {}).length : 0;
   $("#meta").textContent = `request ${data.request_id} · server ${data.took_ms} ms${
     data.cached ? " · cached" : ""
-  } · client ${data.client_ip || "—"} · extra sources ${EXTRA_SOURCES.length} · blocklists ${blCount}`;
+  } · client ${data.client_ip || "-"} · extra sources ${EXTRA_SOURCES.length} · blocklists ${blCount}`;
 }
 
 function ensureMap(lat, lon, label) {

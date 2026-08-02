@@ -126,13 +126,13 @@ async def test_registry_start_stop_refresh_tasks(tmp_data_dir):
 
 @pytest.mark.asyncio
 async def test_registry_load_disk_cache_loads_existing_files_without_fetch(tmp_data_dir):
-    # Empty body so any accidental fetch() call contributes nothing — we want to
+    # Empty body so any accidental fetch() call contributes nothing - we want to
     # prove the data came from the cache file, not from fetch().
     src = _FakeSource("cached_src", b"")
     cache_path = tmp_data_dir / "cached_src.cache"
     cache_path.write_bytes(b"1.1.1.1\n2.2.2.2\n")
     reg = BlocklistRegistry(data_dir=tmp_data_dir, sources=[src])
-    # Do NOT call load_all() — only load_disk_cache (no network I/O).
+    # Do NOT call load_all() - only load_disk_cache (no network I/O).
     await reg.load_disk_cache()
     data, refreshed_at, err = reg.snapshot("cached_src")
     assert data is not None

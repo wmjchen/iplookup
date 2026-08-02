@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-import re
-from ipaddress import IPv4Address
+import json
+from ipaddress import IPv4Address, IPv6Address
 
 import httpx
 
 from app.blocklists.source import FetchResult, IpNetsetData, IpNetsetSource
 
-_CONSENSUS_BASE = "https://collector.torproject.org/recent/relay-descriptors/consensuses/"
+_ONIONOO_SUMMARY = "https://onionoo.torproject.org/summary?flag=Running"
 
 
 class TorBulkExitSource(IpNetsetSource):
@@ -44,48 +44,30 @@ class TorConsensusSource(IpNetsetSource):
     category = "tor_relay"
     severity = 8
     refresh_ttl = 3600
-    url = _CONSENSUS_BASE  # directory listing; fetch() handles two-step
+    url = _ONIONOO_SUMMARY
 
     async def fetch(self, client: httpx.AsyncClient) -> FetchResult:
-        listing_resp = await client.get(_CONSENSUS_BASE)
-        listing_resp.raise_for_status()
-        link_pattern = re.compile(r'href="([^"/]+-consensus)"')
-        candidates = link_pattern.findall(listing_resp.text)
-        if not candidates:
-            link_pattern2 = re.compile(r'href="(\d[^"]+)"')
-            candidates = link_pattern2.findall(listing_resp.text)
-        if not candidates:
-            raise RuntimeError("no consensus files found in collector listing")
-        latest = sorted(candidates)[-1]
-        resp = await client.get(_CONSENSUS_BASE + latest)
+        resp = await client.get(_ONIONOO_SUMMARY)
         resp.raise_for_status()
         return FetchResult(data=resp.content)
 
     def parse(self, raw: bytes) -> IpNetsetData:
         data = IpNetsetData()
-        text = raw.decode("utf-8", errors="replace")
-        current_nickname: str | None = None
-        for line in text.splitlines():
-            if line.startswith("r "):
-                parts = line.split()
-                if len(parts) >= 6:
-                    current_nickname = parts[1]
-                    ip_str = parts[4]
-                    try:
-                        addr = IPv4Address(ip_str) if "." in ip_str else None
-                    except ValueError:
-                        addr = None
-                    if addr is not None:
+        doc = json.loads(raw.decode("utf-8", errors="replace"))
+        for relay in doc.get("relays", []):
+            if not relay.get("r"):
+                continue
+            nickname = relay.get("n", "")
+            for addr_str in relay.get("a", []):
+                addr_str = addr_str.strip("[]")
+                try:
+                    if ":" in addr_str:
+                        addr = IPv6Address(addr_str)
+                        data.ips_v6.add(addr)
+                    else:
+                        addr = IPv4Address(addr_str)
                         data.ips_v4.add(addr)
-                        data.details[addr] = f"relay:{current_nickname}"
-            elif line.startswith("s "):
-                parts = line.split()
-                current_flags = parts[1:]
-                if current_nickname is not None and current_flags:
-                    for addr, det in list(data.details.items()):
-                        if det == f"relay:{current_nickname}":
-                            data.details[addr] = (
-                                f"relay:{current_nickname} flags:{' '.join(current_flags)}"
-                            )
-                            break
+                except ValueError:
+                    continue
+                data.details[addr] = f"relay:{nickname}"
         return data

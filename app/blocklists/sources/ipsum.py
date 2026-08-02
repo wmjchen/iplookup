@@ -4,7 +4,7 @@ from app.blocklists.source import IpNetsetSource
 
 
 class IpsumSource(IpNetsetSource):
-    """stamparm/ipsum — IPs appearing on N+ lists (aggregated from 30+ sources)."""
+    """stamparm/ipsum - IPs appearing on N+ lists (aggregated from 30+ sources)."""
 
     category = "attacker"
     refresh_ttl = 86400  # 24h

@@ -85,7 +85,7 @@ def test_rate_limit_headers_on_success(client):
 
 
 def test_path_is_rate_limited_blocklists_refresh():
-    # Admin refresh endpoint hits upstreams — must be rate-limited (spec §9).
+    # Admin refresh endpoint hits upstreams - must be rate-limited (spec §9).
     assert path_is_rate_limited("/api/blocklists/refresh") is True
     # Read-only status endpoint is NOT rate-limited (has its own 60s Cache-Control).
     assert path_is_rate_limited("/api/blocklists") is False

@@ -6,7 +6,7 @@ Look up an IP or domain and get geolocation, ASN/hosting signals, reverse DNS, R
 
 ```bash
 uv sync
-cp .env.example .env   # optional — fill in tokens you have
+cp .env.example .env   # optional - fill in tokens you have
 uv run python scripts/fetch_databases.py
 uv run iplookup
 ```

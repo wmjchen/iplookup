@@ -1,3 +1,5 @@
+import json
+
 import httpx
 import pytest
 import respx
@@ -60,29 +62,30 @@ ExitNode DEF456 Published 2026-07-19 11:00:00 LastStatus 2026-07-19 12:00:00 Exi
 @pytest.mark.asyncio
 @respx.mock
 async def test_tor_consensus_fetch_and_parse():
-    listing = '<a href="2026-07-19-12-00-00-consensus">2026-07-19-12-00-00-consensus</a>'
-    consensus = """network-status-version 3
-vote-status consensus
-valid-after 2026-07-19T12:00:00
-r Unnamed ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890abcdef 2026-07-19T11:00:00 1.2.3.4 9001 9030
-s Exit Fast Running V2Dir Valid
-r AnotherName +abcdefghijklmnopqrstuvwxyz0123456789ABCD 2026-07-19T11:00:00 5.6.7.8 9001 9030
-s Fast Guard Running V2Dir Valid
-"""
-    respx.get("https://collector.torproject.org/recent/relay-descriptors/consensuses/").mock(
-        return_value=httpx.Response(200, content=listing.encode())
-    )
-    respx.get("https://collector.torproject.org/recent/relay-descriptors/consensuses/2026-07-19-12-00-00-consensus").mock(
-        return_value=httpx.Response(200, content=consensus.encode())
+    body = {
+        "version": "8.0",
+        "relays_published": "2026-08-02 17:00:00",
+        "relays": [
+            {"n": "Unnamed", "f": "AAAA000000000000000000000000000000000001",
+             "a": ["1.2.3.4"], "r": True},
+            {"n": "AnotherName", "f": "BBBB000000000000000000000000000000000002",
+             "a": ["5.6.7.8", "[2001:db8::1]"], "r": True},
+        ],
+    }
+    respx.get("https://onionoo.torproject.org/summary?flag=Running").mock(
+        return_value=httpx.Response(
+            200, content=json.dumps(body).encode(), headers={"content-type": "application/json"}
+        )
     )
     src = TorConsensusSource()
     client = httpx.AsyncClient()
     try:
         result = await src.fetch(client)
         data = src.parse(result.data)
-        from ipaddress import IPv4Address
+        from ipaddress import IPv4Address, IPv6Address
         assert IPv4Address("1.2.3.4") in data.ips_v4
         assert IPv4Address("5.6.7.8") in data.ips_v4
+        assert IPv6Address("2001:db8::1") in data.ips_v6
         match = src.matches_ip("1.2.3.4", data)
         assert match is not None
         assert "Unnamed" in match

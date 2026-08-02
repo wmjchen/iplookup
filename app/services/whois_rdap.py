@@ -67,7 +67,7 @@ def _extract_from_rdap(data: dict[str, Any]) -> WhoisInfo:
 
     # Normalize country names/codes lightly: keep ISO if already 2 letters
     if isinstance(country, str) and len(country.strip()) > 2:
-        # leave full name; native/broadcast compares codes — map common
+        # leave full name; native/broadcast compares codes - map common
         country = country.strip()
 
     port43 = data.get("port43")
