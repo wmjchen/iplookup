@@ -66,6 +66,8 @@ class BlocklistHit(BaseModel):
     severity: int
     detail: str | None = None
     matched_value: str
+    homepage: str | None = None
+    lookup_url: str | None = None
 
 
 class BlocklistReport(BaseModel):
@@ -73,6 +75,7 @@ class BlocklistReport(BaseModel):
     checked_at: float
     source_counts: dict[str, int] = Field(default_factory=dict)
     refreshed_at: dict[str, float] = Field(default_factory=dict)
+    source_homepages: dict[str, str] = Field(default_factory=dict)
     checked_ips: list[str] = Field(default_factory=list)
     checked_domain: str | None = None
 
