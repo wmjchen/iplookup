@@ -13,13 +13,15 @@ class _StaticSource:
     """Source that returns preloaded data (no fetch)."""
 
     def __init__(self, source_id, data, category="attacker", severity=10,
-                 kind="ip", refresh_ttl=3600):
+                 kind="ip", refresh_ttl=3600, homepage="", lookup_url=None):
         self.source_id = source_id
         self._data = data
         self.category = category
         self.severity = severity
         self.kind = kind
         self.refresh_ttl = refresh_ttl
+        self.homepage = homepage
+        self.lookup_url = lookup_url
         self.url = f"http://example.invalid/{source_id}"
 
     async def fetch(self, client):
@@ -43,6 +45,11 @@ class _StaticSource:
             return d
         return None
 
+    def lookup_url_for(self, value):
+        if not self.lookup_url:
+            return None
+        return self.lookup_url.replace("{value}", value)
+
 
 @pytest.fixture
 def populated_registry(tmp_path):
@@ -53,9 +60,12 @@ def populated_registry(tmp_path):
     )
     domain_data = HostsData(domains={"badguy.com"})
     sources = [
-        _StaticSource("vpn_list", ip_data, category="vpn_endpoint", severity=15),
+        _StaticSource("vpn_list", ip_data, category="vpn_endpoint", severity=15,
+                      homepage="https://vpn.example.invalid/",
+                      lookup_url="https://vpn.example.invalid/lookup?ip={value}"),
         _StaticSource("bad_domains", domain_data,
-                      category="adware", severity=15, kind="domain"),
+                      category="adware", severity=15, kind="domain",
+                      homepage="https://hosts.example.invalid/"),
     ]
     reg = BlocklistRegistry(data_dir=tmp_path / "bl", sources=sources)
     for s in sources:
@@ -111,3 +121,29 @@ async def test_check_disabled_returns_empty_report(populated_registry):
     report = await checker.check(ip="1.2.3.4")
     assert report.hits == []
     assert report.source_counts == {}
+
+
+@pytest.mark.asyncio
+async def test_check_hit_carries_homepage_and_lookup_url(populated_registry):
+    checker = BlocklistChecker(registry=populated_registry)
+    report = await checker.check(ip="1.2.3.4")
+    hit = next(h for h in report.hits if h.source_id == "vpn_list")
+    assert hit.homepage == "https://vpn.example.invalid/"
+    assert hit.lookup_url == "https://vpn.example.invalid/lookup?ip=1.2.3.4"
+
+
+@pytest.mark.asyncio
+async def test_check_domain_hit_homepage_without_lookup_url(populated_registry):
+    checker = BlocklistChecker(registry=populated_registry)
+    report = await checker.check(domain="badguy.com")
+    hit = next(h for h in report.hits if h.source_id == "bad_domains")
+    assert hit.homepage == "https://hosts.example.invalid/"
+    assert hit.lookup_url is None
+
+
+@pytest.mark.asyncio
+async def test_check_report_source_homepages(populated_registry):
+    checker = BlocklistChecker(registry=populated_registry)
+    report = await checker.check(ip="99.99.99.99")
+    assert report.source_homepages["vpn_list"] == "https://vpn.example.invalid/"
+    assert report.source_homepages["bad_domains"] == "https://hosts.example.invalid/"
