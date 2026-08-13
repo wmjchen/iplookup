@@ -21,6 +21,8 @@ class _FakeSource:
     kind = "ip"
     category = "test"
     url = "http://example.invalid/"
+    homepage = ""
+    lookup_url = None
 
     def __init__(self, source_id: str, body: bytes, severity: int = 10,
                  refresh_ttl: int = 3600) -> None:
@@ -98,6 +100,20 @@ async def test_registry_summary_structure(tmp_data_dir):
     assert s["entries"] == 2
     assert s["last_error"] is None
     assert "next_refresh_in" in s
+
+
+@pytest.mark.asyncio
+async def test_registry_summary_includes_homepage_and_lookup_url(tmp_data_dir):
+    class LinkSource(_FakeSource):
+        homepage = "https://example.invalid/"
+        lookup_url = "https://example.invalid/q?ip={value}"
+    reg = BlocklistRegistry(
+        data_dir=tmp_data_dir, sources=[LinkSource("linked", b"1.1.1.1\n")],
+    )
+    await reg.load_all()
+    s = reg.summary()[0]
+    assert s["homepage"] == "https://example.invalid/"
+    assert s["lookup_url"] == "https://example.invalid/q?ip={value}"
 
 
 @pytest.mark.asyncio

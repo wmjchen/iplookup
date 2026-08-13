@@ -13,6 +13,7 @@ const EXTRA_SOURCES = [
   {
     id: "ip_api",
     label: "ip-api",
+    homepage: "https://ip-api.com/",
     mode: "server",
     // Server proxies to http://ip-api.com and sends X-Forwarded-For = visitor IP
     buildUrl: (ip) => `/api/providers/ip-api?ip=${encodeURIComponent(ip)}`,
@@ -40,6 +41,7 @@ const EXTRA_SOURCES = [
   {
     id: "ipinfo_lite",
     label: "IPinfo Lite",
+    homepage: "https://ipinfo.io/",
     mode: "server",
     // Server proxies to api.ipinfo.io/lite with our token (country + ASN only)
     buildUrl: (ip) => `/api/providers/ipinfo-lite?ip=${encodeURIComponent(ip)}`,
@@ -67,6 +69,7 @@ const EXTRA_SOURCES = [
   {
     id: "ipwhois",
     label: "ipwho.is",
+    homepage: "https://ipwho.is/",
     mode: "browser",
     buildUrl: (ip) => `https://ipwho.is/${encodeURIComponent(ip)}`,
     map: (d, ip) => {
@@ -98,6 +101,7 @@ const EXTRA_SOURCES = [
   {
     id: "ipinfo",
     label: "IPinfo",
+    homepage: "https://ipinfo.io/",
     mode: "browser",
     buildUrl: (ip) => `https://ipinfo.io/${encodeURIComponent(ip)}/json`,
     map: (d, ip) => {
@@ -129,6 +133,7 @@ const EXTRA_SOURCES = [
   {
     id: "freeipapi",
     label: "freeipapi",
+    homepage: "https://www.freeipapi.com/",
     mode: "browser",
     buildUrl: (ip) =>
       `https://free.freeipapi.com/api/json/${encodeURIComponent(ip)}`,
@@ -156,6 +161,7 @@ const EXTRA_SOURCES = [
   {
     id: "ipsb",
     label: "ip.sb",
+    homepage: "https://ip.sb/",
     mode: "browser",
     buildUrl: (ip) => `https://api.ip.sb/geoip/${encodeURIComponent(ip)}`,
     map: (d, ip) => ({
@@ -180,6 +186,14 @@ const EXTRA_SOURCES = [
     }),
   },
 ];
+
+/** Homepages for backend-only providers (local DBs, no per-IP web page). */
+const SERVER_PROVIDER_LINKS = {
+  maxmind: "https://www.maxmind.com/",
+  ip_index: "https://github.com/Umkus/ip-index",
+  ipfire: "https://www.ipfire.org/location/",
+  ip2location: "https://lite.ip2location.com/",
+};
 
 function showStatus(msg, isError = false) {
   const el = $("#status");
@@ -362,8 +376,14 @@ function renderSourcesTable(sources) {
         .join(", ");
       const flag = countryFlag(s.country_code);
       const country = s.country || s.country_code || "";
+      const link =
+        SERVER_PROVIDER_LINKS[s.provider_id] ||
+        EXTRA_SOURCES.find((e) => e.id === s.provider_id)?.homepage;
+      const provider = link
+        ? `<a href="${escapeHtml(link)}" target="_blank" rel="noopener">${escapeHtml(s.provider_id || "")}</a>`
+        : escapeHtml(s.provider_id || "");
       return `<tr>
-        <td>${escapeHtml(s.provider_id || "")}</td>
+        <td>${provider}</td>
         <td><span class="flag-cell">${flag}</span>${escapeHtml(country)}</td>
         <td>${escapeHtml(s.region || "")}</td>
         <td>${escapeHtml(s.city || "")}</td>
@@ -399,8 +419,12 @@ function renderBlocklists(report) {
   const tbody = $("#blocklists-table tbody");
   tbody.innerHTML = hits.map(h => {
     const sev = h.severity >= 20 ? "bad" : h.severity >= 10 ? "warn" : "";
+    const link = h.lookup_url || h.homepage;
+    const source = link
+      ? `<a href="${escapeHtml(link)}" target="_blank" rel="noopener">${escapeHtml(h.source_id || "")}</a>`
+      : escapeHtml(h.source_id || "");
     return `<tr>
-      <td>${escapeHtml(h.source_id || "")}</td>
+      <td>${source}</td>
       <td>${badge(h.category || "", sev)}</td>
       <td>${escapeHtml(String(h.severity ?? ""))}</td>
       <td>${escapeHtml(h.matched_value || "")}</td>
@@ -412,9 +436,16 @@ function renderBlocklists(report) {
     } sources</td></tr>`;
 
   const counts = bl.source_counts || {};
+  const homepages = bl.source_homepages || {};
   $("#loaded-count").textContent = String(Object.keys(counts).length);
   $("#loaded-sources").innerHTML = Object.entries(counts)
-    .map(([id, n]) => `${escapeHtml(id)}: ${n} entries`)
+    .map(([id, n]) => {
+      const hp = homepages[id];
+      const label = hp
+        ? `<a href="${escapeHtml(hp)}" target="_blank" rel="noopener">${escapeHtml(id)}</a>`
+        : escapeHtml(id);
+      return `${label}: ${n} entries`;
+    })
     .join("<br>");
 }
 

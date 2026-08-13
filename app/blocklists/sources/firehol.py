@@ -5,6 +5,7 @@ from app.blocklists.source import IpNetsetSource
 
 class _FireholBase(IpNetsetSource):
     category = "attacker"
+    homepage = "https://iplists.firehol.org/"
 
 
 class FireholLevel1Source(_FireholBase):

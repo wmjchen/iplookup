@@ -19,6 +19,7 @@ class GluetunVpnSource(IpNetsetSource):
     severity = 15
     refresh_ttl = 86400  # 24h
     url = _TARBALL_URL
+    homepage = "https://github.com/qdm12/gluetun-servers"
 
     async def fetch(self, client: httpx.AsyncClient) -> FetchResult:
         resp = await client.get(_TARBALL_URL)

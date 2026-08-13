@@ -7,6 +7,8 @@ class _SpamhausBase(IpNetsetSource):
     category = "hijacked_network"
     severity = 25
     refresh_ttl = 86400  # 24h
+    homepage = "https://www.spamhaus.org/drop/"
+    lookup_url = "https://www.spamhaus.org/query/bl?ip={value}"
 
     def parse(self, raw: bytes) -> IpNetsetData:
         text = raw.decode("utf-8", errors="replace")

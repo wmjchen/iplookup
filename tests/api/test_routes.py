@@ -46,6 +46,7 @@ class FakeRegistry:
             "source_id": "test", "category": "attacker", "severity": 10,
             "kind": "ip", "entries": 100, "last_refreshed": 0.0,
             "next_refresh_in": 3600, "last_error": None,
+            "homepage": "https://example.invalid/", "lookup_url": None,
         }]
 
     def total_entries(self):
@@ -248,6 +249,8 @@ def test_api_blocklists(client):
         assert "last_refreshed" in s
         assert "next_refresh_in" in s
         assert "last_error" in s
+        assert "homepage" in s
+        assert "lookup_url" in s
 
 
 def test_api_blocklists_refresh_no_token_404(client):

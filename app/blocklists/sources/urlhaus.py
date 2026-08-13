@@ -14,6 +14,8 @@ class UrlhausHostnamesSource(HostsFileSource):
     severity = 20
     refresh_ttl = 3600  # 1h
     url = "https://urlhaus.abuse.ch/downloads/csv_recent/"
+    homepage = "https://urlhaus.abuse.ch/"
+    lookup_url = "https://urlhaus.abuse.ch/host/{value}/"
 
     def parse(self, raw: bytes) -> HostsData:
         data = HostsData()

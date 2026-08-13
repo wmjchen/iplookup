@@ -24,6 +24,7 @@ class BlocklistChecker:
     ) -> BlocklistReport:
         hits: list[BlocklistHit] = []
         source_counts: dict[str, int] = {}
+        source_homepages: dict[str, str] = {}
         refreshed_at: dict[str, float] = {}
         checked_ips: list[str] = []
         checked_domain: str | None = None
@@ -40,6 +41,7 @@ class BlocklistChecker:
             source_counts[source.source_id] = (
                 _count_entries(data) if data is not None else 0
             )
+            source_homepages[source.source_id] = source.homepage
             if last_refreshed is not None:
                 refreshed_at[source.source_id] = last_refreshed
             if data is None:
@@ -54,6 +56,8 @@ class BlocklistChecker:
                         severity=source.severity,
                         detail=detail,
                         matched_value=ip,
+                        homepage=source.homepage or None,
+                        lookup_url=source.lookup_url_for(ip),
                     ))
 
             if domain is not None and source.kind in ("domain", "ip+domain"):
@@ -65,6 +69,8 @@ class BlocklistChecker:
                         severity=source.severity,
                         detail=matched,
                         matched_value=domain,
+                        homepage=source.homepage or None,
+                        lookup_url=source.lookup_url_for(domain),
                     ))
 
         if ip is not None:
@@ -79,4 +85,5 @@ class BlocklistChecker:
             refreshed_at=refreshed_at,
             checked_ips=checked_ips,
             checked_domain=checked_domain,
+            source_homepages=source_homepages,
         )

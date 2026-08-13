@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from ipaddress import IPv4Address, IPv4Network, IPv6Address, IPv6Network, ip_address
 from typing import Any, Literal, Protocol, runtime_checkable
+import urllib.parse
 
 import httpx
 
@@ -36,11 +37,14 @@ class BlocklistSource(Protocol):
     kind: Literal["ip", "domain", "ip+domain"]
     refresh_ttl: int
     url: str
+    homepage: str
+    lookup_url: str | None
 
     async def fetch(self, client: httpx.AsyncClient) -> FetchResult: ...
     def parse(self, raw: bytes) -> Any: ...
     def matches_ip(self, ip: str, data: Any) -> str | None: ...
     def matches_domain(self, domain: str, data: Any) -> str | None: ...
+    def lookup_url_for(self, value: str) -> str | None: ...
 
 
 class IpNetsetSource:
@@ -52,6 +56,13 @@ class IpNetsetSource:
     kind: Literal["ip", "domain", "ip+domain"] = "ip"
     refresh_ttl: int = 3600
     url: str = ""
+    homepage: str = ""
+    lookup_url: str | None = None
+
+    def lookup_url_for(self, value: str) -> str | None:
+        if not self.lookup_url:
+            return None
+        return self.lookup_url.replace("{value}", urllib.parse.quote(value, safe=""))
 
     async def fetch(self, client: httpx.AsyncClient) -> FetchResult:
         resp = await client.get(self.url)
@@ -119,6 +130,13 @@ class HostsFileSource:
     kind: Literal["ip", "domain", "ip+domain"] = "domain"
     refresh_ttl: int = 86400
     url: str = ""
+    homepage: str = ""
+    lookup_url: str | None = None
+
+    def lookup_url_for(self, value: str) -> str | None:
+        if not self.lookup_url:
+            return None
+        return self.lookup_url.replace("{value}", urllib.parse.quote(value, safe=""))
 
     async def fetch(self, client: httpx.AsyncClient) -> FetchResult:
         resp = await client.get(self.url)

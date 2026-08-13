@@ -9,6 +9,8 @@ _CATEGORIES = {None, "adware", "fakenews", "gambling", "porn", "social"}
 class StevenblackHostsSource(HostsFileSource):
     """StevenBlack hosts - optionally a category extension."""
 
+    homepage = "https://github.com/StevenBlack/hosts"
+
     def __init__(self, category: str | None = None) -> None:
         if category not in _CATEGORIES:
             raise ValueError(f"invalid stevenblack category: {category}")

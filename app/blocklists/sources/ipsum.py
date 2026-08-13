@@ -8,6 +8,7 @@ class IpsumSource(IpNetsetSource):
 
     category = "attacker"
     refresh_ttl = 86400  # 24h
+    homepage = "https://github.com/stamparm/ipsum"
 
     def __init__(self, level: int) -> None:
         if level not in {1, 2, 3, 4, 5, 6, 7, 8}:
