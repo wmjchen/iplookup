@@ -15,6 +15,9 @@ from app.blocklists.sources.firehol import (
 )
 from app.blocklists.sources.gluetun_vpn import GluetunVpnSource
 from app.blocklists.sources.ipsum import IpsumSource
+from app.blocklists.sources.knockknock import (
+    KnockKnockMonthSource, KnockKnockYearSource,
+)
 from app.blocklists.sources.spamhaus import (
     SpamhausDropSource, SpamhausDropv6Source, SpamhausEdropSource,
 )
@@ -41,6 +44,8 @@ def _default_on() -> list[BlocklistSource]:
         GluetunVpnSource(),
         StevenblackHostsSource(category=None),
         UrlhausHostnamesSource(),
+        KnockKnockYearSource(),
+        KnockKnockMonthSource(),
     ]
 
 
