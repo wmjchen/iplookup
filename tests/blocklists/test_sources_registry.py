@@ -11,10 +11,12 @@ def test_all_sources_register():
     assert "ipsum_3" in ids
     assert "stevenblack_hosts" in ids
     assert "urlhaus_hostnames" in ids
+    assert "knockknock_year" in ids
+    assert "knockknock_month" in ids
 
 
 def test_default_on_count():
-    assert len(default_source_ids()) == 14
+    assert len(default_source_ids()) == 16
 
 
 def test_default_off_count():
@@ -28,7 +30,7 @@ def test_no_overlap_default_on_off():
 
 
 def test_total_source_count():
-    assert len(default_source_ids()) + len(default_off_source_ids()) == 27
+    assert len(default_source_ids()) + len(default_off_source_ids()) == 29
 
 
 def test_ipsum_levels_distinct():
