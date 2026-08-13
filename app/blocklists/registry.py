@@ -223,6 +223,8 @@ class BlocklistRegistry:
                 "last_refreshed": refreshed,
                 "next_refresh_in": next_refresh,
                 "last_error": err,
+                "homepage": s.homepage,
+                "lookup_url": s.lookup_url,
             })
         return out
 
