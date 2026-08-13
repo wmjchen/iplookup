@@ -1,4 +1,5 @@
 import time
+import urllib.parse
 from ipaddress import IPv4Address
 
 import pytest
@@ -48,7 +49,7 @@ class _StaticSource:
     def lookup_url_for(self, value):
         if not self.lookup_url:
             return None
-        return self.lookup_url.replace("{value}", value)
+        return self.lookup_url.replace("{value}", urllib.parse.quote(value, safe=""))
 
 
 @pytest.fixture

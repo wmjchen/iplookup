@@ -71,3 +71,10 @@ def test_known_lookup_urls_resolve():
     assert by_id["urlhaus_hostnames"].lookup_url_for("badguy.com") == (
         "https://urlhaus.abuse.ch/host/badguy.com/"
     )
+
+
+def test_sources_without_lookup_page_return_none():
+    by_id = {s.source_id: s for s in all_sources()}
+    assert by_id["firehol_level1"].lookup_url_for("1.2.3.4") is None
+    assert by_id["ipsum_3"].lookup_url_for("1.2.3.4") is None
+    assert by_id["stevenblack_hosts"].lookup_url_for("badguy.com") is None
