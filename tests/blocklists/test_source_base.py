@@ -89,3 +89,18 @@ def test_hosts_matches_exact_and_suffix():
     assert src.matches_domain("x.badguy.com", data) == "badguy.com"
     assert src.matches_domain("notbadguy.com", data) is None
     assert src.matches_domain("com", data) is None  # don't match TLD only
+
+
+def test_source_base_homepage_lookup_url_defaults():
+    assert ConcreteIpSource().homepage == ""
+    assert ConcreteIpSource().lookup_url is None
+    assert ConcreteHostsSource().homepage == ""
+    assert ConcreteHostsSource().lookup_url is None
+
+
+def test_lookup_url_for_substitutes_and_encodes_value():
+    src = ConcreteIpSource()
+    assert src.lookup_url_for("1.2.3.4") is None  # no template -> None
+    src.lookup_url = "https://example.invalid/q?ip={value}"
+    assert src.lookup_url_for("1.2.3.4") == "https://example.invalid/q?ip=1.2.3.4"
+    assert src.lookup_url_for("2001:db8::1") == "https://example.invalid/q?ip=2001%3Adb8%3A%3A1"
