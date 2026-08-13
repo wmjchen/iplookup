@@ -47,3 +47,27 @@ def test_stevenblack_categories_distinct():
     assert "stevenblack_gambling" in ids
     assert "stevenblack_porn" in ids
     assert "stevenblack_social" in ids
+
+
+def test_all_sources_have_homepage():
+    for s in all_sources():
+        assert s.homepage, f"{s.source_id} must define a homepage"
+
+
+def test_known_lookup_urls_resolve():
+    by_id = {s.source_id: s for s in all_sources()}
+    assert by_id["spamhaus_drop"].lookup_url_for("1.2.3.4") == (
+        "https://www.spamhaus.org/query/bl?ip=1.2.3.4"
+    )
+    assert by_id["spamhaus_edrop"].lookup_url_for("1.2.3.4") == (
+        "https://www.spamhaus.org/query/bl?ip=1.2.3.4"
+    )
+    assert by_id["blocklist_de"].lookup_url_for("1.2.3.4") == (
+        "https://www.blocklist.de/en/search.html?ip=1.2.3.4"
+    )
+    assert by_id["feodo"].lookup_url_for("1.2.3.4") == (
+        "https://feodotracker.abuse.ch/browse/host/1.2.3.4/"
+    )
+    assert by_id["urlhaus_hostnames"].lookup_url_for("badguy.com") == (
+        "https://urlhaus.abuse.ch/host/badguy.com/"
+    )

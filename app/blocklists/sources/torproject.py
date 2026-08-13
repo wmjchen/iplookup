@@ -16,6 +16,7 @@ class TorBulkExitSource(IpNetsetSource):
     severity = 18
     refresh_ttl = 3600
     url = "https://check.torproject.org/torbulkexitlist"
+    homepage = "https://check.torproject.org/"
 
 
 class TorExitAddressesSource(IpNetsetSource):
@@ -24,6 +25,7 @@ class TorExitAddressesSource(IpNetsetSource):
     severity = 18
     refresh_ttl = 3600
     url = "https://check.torproject.org/exit-addresses"
+    homepage = "https://check.torproject.org/"
 
     def parse(self, raw: bytes) -> IpNetsetData:
         data = IpNetsetData()
@@ -45,6 +47,7 @@ class TorConsensusSource(IpNetsetSource):
     severity = 8
     refresh_ttl = 3600
     url = _ONIONOO_SUMMARY
+    homepage = "https://metrics.torproject.org/"
 
     async def fetch(self, client: httpx.AsyncClient) -> FetchResult:
         resp = await client.get(_ONIONOO_SUMMARY)

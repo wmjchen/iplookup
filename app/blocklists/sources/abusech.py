@@ -9,6 +9,8 @@ class FeodoSource(IpNetsetSource):
     severity = 20
     refresh_ttl = 3600
     url = "https://feodotracker.abuse.ch/downloads/ipblocklist.txt"
+    homepage = "https://feodotracker.abuse.ch/"
+    lookup_url = "https://feodotracker.abuse.ch/browse/host/{value}/"
 
 
 class AbusechSslblSource(IpNetsetSource):
@@ -17,6 +19,7 @@ class AbusechSslblSource(IpNetsetSource):
     severity = 15
     refresh_ttl = 3600
     url = "https://sslbl.abuse.ch/downloads/sslipblacklist.txt"
+    homepage = "https://sslbl.abuse.ch/"
 
 
 class AbusechBogonsSource(IpNetsetSource):
@@ -25,3 +28,4 @@ class AbusechBogonsSource(IpNetsetSource):
     severity = 8
     refresh_ttl = 3600
     url = "https://feodotracker.abuse.ch/downloads/bogonlist.txt"
+    homepage = "https://feodotracker.abuse.ch/"

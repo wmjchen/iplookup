@@ -9,3 +9,4 @@ class BinaryDefenseSource(IpNetsetSource):
     severity = 8
     refresh_ttl = 3600  # 1h
     url = "https://binarydefense.com/banlist.txt"
+    homepage = "https://binarydefense.com/"
