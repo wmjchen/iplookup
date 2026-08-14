@@ -5,6 +5,7 @@
   --text: #e7ecf3;
   --muted: #8b9bb4;
   --accent: #5b9fd4;
+  --link: #9cc9ee;
   --good: #3ecf8e;
   --warn: #f0b429;
   --bad: #f07178;
@@ -195,6 +196,13 @@ body {
 }
 
 .muted { color: var(--muted); font-weight: 500; text-transform: none; letter-spacing: 0; }
+
+#sources-table a,
+#blocklists-table a,
+#loaded-sources a {
+  color: var(--link);
+  text-decoration: underline;
+}
 
 .hint {
   margin: -0.35rem 0 0.75rem;
